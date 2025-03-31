@@ -57,8 +57,11 @@ class ModelHandler:
             if self.device == "mps":
                 torch.mps.empty_cache()  # Clear MPS cache before generation
             
+            # Format prompt with chat template
+            formatted_prompt = f"<|system|>You are a helpful AI assistant.</s><|user|>{prompt}</s><|assistant|>"
+            
             # Tokenize input
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            inputs = self.tokenizer(formatted_prompt, return_tensors="pt").to(self.device)
             
             # Generate text
             start_time = time.time()
@@ -71,12 +74,17 @@ class ModelHandler:
                 repetition_penalty=1.2,
                 pad_token_id=self.tokenizer.eos_token_id,
                 eos_token_id=self.tokenizer.eos_token_id,
-                num_return_sequences=1
+                num_return_sequences=1,
+                early_stopping=True
             )
             processing_time = time.time() - start_time
             
             # Decode and return generated text
             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Remove the prompt from the generated text
+            generated_text = generated_text.replace(formatted_prompt, "").strip()
+            
             return generated_text, processing_time
             
         except Exception as e:
