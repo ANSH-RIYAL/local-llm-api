@@ -10,9 +10,9 @@ cleanup() {
 # Set up trap for cleanup on script exit
 trap cleanup EXIT
 
-# Start the FastAPI server in the background
+# Start the FastAPI server
 echo "Starting FastAPI server..."
-python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+python3 -m uvicorn main:app --host 0.0.0.0 --port 8001 &
 
 # Wait a moment for the server to start
 sleep 2
@@ -24,10 +24,6 @@ if ! curl -s http://localhost:8001/ > /dev/null; then
 fi
 
 echo "FastAPI server is running on http://localhost:8001"
-
-# Start localtunnel
-echo "Starting localtunnel..."
-lt --port 8001 --subdomain ansh-llm
 
 # Keep the script running
 wait 
