@@ -17,7 +17,7 @@ class ModelHandler:
         "deepseek": {
             "name": "deepseek-ai/deepseek-coder-1.3b-base",
             "description": "A 1.3B parameter code-specialized language model",
-            "chat_template": "Write code for the following task. Return only the code, no explanations:\n\n{prompt}\n\nCode:"
+            "chat_template": "You are an expert programmer. Write Python code for the following task:\n\nTask: {prompt}\n\nCode:\n```python\n"
         },
         "phi2": {
             "name": "microsoft/phi-2",
@@ -104,14 +104,19 @@ class ModelHandler:
             processing_time = time.time() - start_time
             
             # Decode and return generated text
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=False)
+            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
-            # Find the assistant's response after the last chat template marker
-            if "Assistant:" in generated_text:
-                generated_text = generated_text.split("Assistant:")[-1].strip()
-            elif "Output:" in generated_text:
-                generated_text = generated_text.split("Output:")[-1].strip()
-            else:
+            # Clean up the generated text based on model type
+            if self.model_name == "deepseek":
+                # Extract code between ```python and ``` if present
+                if "```python" in generated_text and "```" in generated_text[generated_text.find("```python")+8:]:
+                    code_start = generated_text.find("```python") + 8
+                    code_end = generated_text.find("```", code_start)
+                    generated_text = generated_text[code_start:code_end].strip()
+                else:
+                    # Remove the prompt and any special tokens
+                    generated_text = generated_text.replace(formatted_prompt, "").strip()
+            elif self.model_name == "tinyllama":
                 # For TinyLlama, remove the chat template
                 generated_text = generated_text.replace(formatted_prompt, "").strip()
             
