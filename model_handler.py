@@ -82,8 +82,12 @@ class ModelHandler:
             # Decode and return generated text
             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
-            # Remove the prompt from the generated text
+            # Remove the prompt and chat template from the generated text
             generated_text = generated_text.replace(formatted_prompt, "").strip()
+            generated_text = generated_text.replace("<|system|>You are a helpful AI assistant.</s>", "").strip()
+            generated_text = generated_text.replace("<|user|>", "").strip()
+            generated_text = generated_text.replace("</s>", "").strip()
+            generated_text = generated_text.replace("<|assistant|>", "").strip()
             
             return generated_text, processing_time
             
