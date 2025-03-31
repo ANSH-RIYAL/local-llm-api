@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "What is the capital of France?",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.015551090240478516,
+    "status": "error"
+  },
+  {
+    "prompt": "Write a short poem about spring.",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.10349392890930176,
+    "status": "error"
+  },
+  {
+    "prompt": "Explain quantum computing in simple terms.",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.003438711166381836,
+    "status": "error"
+  },
+  {
+    "prompt": "What are the benefits of meditation?",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.002328157424926758,
+    "status": "error"
+  },
+  {
+    "prompt": "Write a recipe for chocolate chip cookies.",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.013786077499389648,
+    "status": "error"
+  },
+  {
+    "prompt": "What is the theory of relativity?",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.002888917922973633,
+    "status": "error"
+  },
+  {
+    "prompt": "Create a short story about a robot.",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.0037758350372314453,
+    "status": "error"
+  },
+  {
+    "prompt": "What are the main causes of climate change?",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.001965761184692383,
+    "status": "error"
+  },
+  {
+    "prompt": "Explain how photosynthesis works.",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.0019638538360595703,
+    "status": "error"
+  },
+  {
+    "prompt": "What is artificial intelligence?",
+    "error": "{\"detail\":\"Not Found\"}",
+    "latency": 0.002688884735107422,
+    "status": "error"
+  }
+]

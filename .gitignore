@@ -24,6 +24,7 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
+.env
 
 # IDE
 .idea/
@@ -31,14 +32,27 @@ ENV/
 *.swp
 *.swo
 
-# Model files
+# Model files and downloads
 models/
 *.bin
 *.pt
 *.pth
 *.ckpt
 *.safetensors
+*.h5
+*.hdf5
 
-# Environment variables
-.env
-.env.local 
+# Logs
+*.log
+logs/
+log/
+
+# Local development
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ngrok
+.ngrok/ 
