@@ -51,5 +51,4 @@ else
 fi
 
 echo "Starting FastAPI server with model: $MODEL_NAME..."
-export MODEL_NAME=$MODEL_NAME
-python3 main.py 
+python3 main.py --model "$MODEL_NAME" 
