@@ -17,7 +17,7 @@ class ModelHandler:
         "deepseek": {
             "name": "deepseek-ai/deepseek-coder-1.3b-base",
             "description": "A 1.3B parameter code-specialized language model",
-            "chat_template": "Human: {prompt}\nAssistant:"
+            "chat_template": "Write code for the following task. Return only the code, no explanations:\n\n{prompt}\n\nCode:"
         },
         "phi2": {
             "name": "microsoft/phi-2",
