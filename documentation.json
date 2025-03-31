@@ -1,0 +1,40 @@
+{
+    "name": "Local LLM API",
+    "version": "1.0.0",
+    "description": "A FastAPI service that provides text generation capabilities using TinyLlama model",
+    "endpoints": {
+        "/": {
+            "method": "GET",
+            "description": "Get the service status and model information",
+            "response": {
+                "status": "string",
+                "service": "string",
+                "model": "string"
+            }
+        },
+        "/generate": {
+            "method": "POST",
+            "description": "Generate text using the TinyLlama model",
+            "request_body": {
+                "prompt": "string (required) - The input text to generate from",
+                "max_length": "integer (optional) - Maximum length of generated text (default: 100)",
+                "temperature": "float (optional) - Sampling temperature (default: 0.7)"
+            },
+            "response": {
+                "generated_text": "string - The generated text",
+                "processing_time": "float - Time taken to generate the text in seconds",
+                "model_used": "string - Name of the model used"
+            }
+        },
+        "/documentation": {
+            "method": "GET",
+            "description": "Get the API documentation in JSON format",
+            "response": "JSON object containing API documentation"
+        }
+    },
+    "model": {
+        "name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "description": "A 1.1B parameter language model fine-tuned for chat",
+        "device": "MPS (Apple Silicon) or CPU"
+    }
+} 

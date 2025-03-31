@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 from model_handler import ModelHandler
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -50,9 +51,36 @@ class LLMResponse(BaseModel):
     processing_time: float
     model_used: str
 
+def load_api_docs():
+    """Load API documentation from JSON file"""
+    try:
+        docs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "documentation.json")
+        with open(docs_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading API documentation: {str(e)}")
+        return {"error": "Failed to load API documentation"}
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the model on startup"""
+    global model_handler
+    try:
+        logger.info("Initializing with model: TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+        model_handler = ModelHandler()
+        model_handler.load_model()
+    except Exception as e:
+        logger.error(f"Error initializing model: {str(e)}")
+        raise
+
 @app.get("/")
 async def root():
-    return {"status": "running", "service": "Local LLM Service", "model": MODEL_NAME}
+    """Root endpoint to check service status"""
+    return {
+        "status": "running",
+        "service": "Local LLM Service",
+        "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    }
 
 @app.post("/generate", response_model=LLMResponse)
 async def generate_text(request: LLMRequest):
@@ -80,6 +108,11 @@ async def generate_text(request: LLMRequest):
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/documentation")
+async def get_documentation():
+    """Get API documentation"""
+    return load_api_docs()
 
 # Only start the server if this file is run directly
 if __name__ == "__main__":
