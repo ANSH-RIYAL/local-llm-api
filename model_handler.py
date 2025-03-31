@@ -64,10 +64,14 @@ class ModelHandler:
             start_time = time.time()
             outputs = self.model.generate(
                 **inputs,
-                max_length=max_length,
+                max_new_tokens=max_length,
                 temperature=temperature,
                 do_sample=True,
-                pad_token_id=self.tokenizer.eos_token_id
+                top_p=0.9,
+                repetition_penalty=1.2,
+                pad_token_id=self.tokenizer.eos_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
+                num_return_sequences=1
             )
             processing_time = time.time() - start_time
             
