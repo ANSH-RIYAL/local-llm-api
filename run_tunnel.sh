@@ -12,7 +12,7 @@ trap cleanup EXIT
 
 # Start ngrok tunnel
 echo "Starting ngrok tunnel..."
-ngrok http 8001
+ngrok http 8050
 
 # Keep the script running
 wait 
