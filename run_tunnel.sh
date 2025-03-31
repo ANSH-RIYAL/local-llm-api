@@ -10,9 +10,15 @@ cleanup() {
 # Set up trap for cleanup on script exit
 trap cleanup EXIT
 
-# Start ngrok tunnel
-echo "Starting ngrok tunnel..."
-ngrok http 8050
+# Install localtunnel if not already installed
+if ! command -v lt &> /dev/null; then
+    echo "Installing localtunnel..."
+    npm install -g localtunnel
+fi
+
+# Start localtunnel
+echo "Starting localtunnel..."
+lt --port 8050
 
 # Keep the script running
 wait 
