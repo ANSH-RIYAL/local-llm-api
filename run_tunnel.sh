@@ -1,22 +1,31 @@
 #!/bin/bash
 
-# Function to cleanup background processes
+# Function to cleanup on exit
 cleanup() {
     echo "Cleaning up..."
-    kill $(jobs -p) 2>/dev/null
-    exit
+    kill $(jobs -p) 2>/dev/null || true
 }
 
-# Set up trap for cleanup on script exit
+# Set up trap for cleanup
 trap cleanup EXIT
 
-# Install localtunnel if not already installed
+# Check if localtunnel is installed
 if ! command -v lt &> /dev/null; then
-    echo "Installing localtunnel..."
+    echo "localtunnel is not installed. Installing..."
+    if ! command -v npm &> /dev/null; then
+        echo "Error: npm is not installed. Please install Node.js and npm first."
+        exit 1
+    fi
     npm install -g localtunnel
 fi
 
-# Start localtunnel
+# Check if server is running
+if ! curl -s http://localhost:8050/ &> /dev/null; then
+    echo "Error: FastAPI server is not running on port 8050"
+    echo "Please start the server first using ./run_server.sh"
+    exit 1
+fi
+
 echo "Starting localtunnel..."
 lt --port 8050
 

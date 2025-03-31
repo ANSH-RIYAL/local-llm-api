@@ -1,58 +1,39 @@
 #!/bin/bash
 
-# Function to cleanup background processes
+# Function to cleanup on exit
 cleanup() {
     echo "Cleaning up..."
-    kill $(jobs -p) 2>/dev/null
-    exit
+    deactivate 2>/dev/null || true
 }
 
-# Set up trap for cleanup on script exit
-trap cleanup EXIT INT TERM
+# Set up trap for cleanup
+trap cleanup EXIT
 
-# Create and activate virtual environment if it doesn't exist
+# Function to check if port is in use
+check_port() {
+    if lsof -i:$1 >/dev/null 2>&1; then
+        echo "Port $1 is already in use. Please stop any running server first."
+        exit 1
+    fi
+}
+
+# Check if ports are available
+check_port 8050
+
+echo "Activating virtual environment..."
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
     python3 -m venv venv
 fi
-
-# Activate virtual environment
-echo "Activating virtual environment..."
 source venv/bin/activate
 
-# Install requirements only if venv was just created
-if [ ! -f "venv/.requirements_installed" ]; then
-    echo "Installing requirements..."
+echo "Installing requirements..."
+if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
-    touch venv/.requirements_installed
 else
-    echo "Requirements already installed, skipping..."
-fi
-
-# Set the model to TinyLlama
-export MODEL_NAME="TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-
-# Check if port 8050 is already in use
-if lsof -i:8050 > /dev/null; then
-    echo "Port 8050 is already in use. Please stop any running server first."
+    echo "No requirements.txt found. Please ensure it exists."
     exit 1
 fi
 
-# Start the FastAPI server
 echo "Starting FastAPI server..."
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8050 &
-server_pid=$!
-
-# Wait for server to start (up to 30 seconds)
-for i in {1..30}; do
-    if curl -s http://localhost:8050/ > /dev/null; then
-        echo "FastAPI server is running on http://localhost:8050"
-        # Keep the script running
-        wait $server_pid
-        exit 0
-    fi
-    sleep 1
-done
-
-echo "Error: FastAPI server failed to start within 30 seconds"
-exit 1 
+python3 main.py 
