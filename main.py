@@ -4,9 +4,8 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 from dotenv import load_dotenv
-from app.models.model_handler import ModelHandler
+from model_handler import ModelHandler
 import logging
-import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,22 +15,12 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Get model name from environment or use default
-MODEL_NAME = os.getenv("MODEL_NAME", "deepseek-ai/deepseek-coder-1.3b-base")
+MODEL_NAME = os.getenv("MODEL_NAME", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 logger.info(f"Initializing with model: {MODEL_NAME}")
 
 # Initialize model handler and load model immediately
 model_handler = ModelHandler(model_name=MODEL_NAME)
 model_handler.load_model()  # Pre-load the model
-
-# Load API documentation
-def load_api_docs():
-    docs_path = os.path.join(os.path.dirname(__file__), "docs", "api_documentation.json")
-    try:
-        with open(docs_path, 'r') as f:
-            return json.load(f)
-    except Exception as e:
-        logger.error(f"Error loading API documentation: {str(e)}")
-        return {"error": "Failed to load API documentation"}
 
 app = FastAPI(
     title="Local LLM Service",
@@ -65,11 +54,6 @@ class LLMResponse(BaseModel):
 async def root():
     return {"status": "running", "service": "Local LLM Service", "model": MODEL_NAME}
 
-@app.get("/documentation")
-async def get_documentation():
-    """Get the API documentation in JSON format"""
-    return load_api_docs()
-
 @app.post("/generate", response_model=LLMResponse)
 async def generate_text(request: LLMRequest):
     global model_handler
@@ -97,6 +81,7 @@ async def generate_text(request: LLMRequest):
         logger.error(f"Error processing request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Only start the server if this file is run directly
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8050) 
