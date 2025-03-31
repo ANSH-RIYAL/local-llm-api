@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from model_handler import ModelHandler
 import logging
 import json
+import argparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,19 +16,15 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-# Get model name from environment or use default
-MODEL_NAME = os.getenv("MODEL_NAME", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-logger.info(f"Initializing with model: {MODEL_NAME}")
-
-# Initialize model handler and load model immediately
-model_handler = ModelHandler(model_name=MODEL_NAME)
-model_handler.load_model()  # Pre-load the model
-
+# Initialize FastAPI app
 app = FastAPI(
-    title="Local LLM Service",
-    description=f"A service to run {MODEL_NAME} inference locally",
+    title="Local LLM API",
+    description="A service to run inference locally",
     version="1.0.0"
 )
+
+# Initialize model handler
+model_handler = None
 
 # Add CORS middleware
 app.add_middleware(
@@ -39,11 +36,10 @@ app.add_middleware(
 )
 
 # Request model
-class LLMRequest(BaseModel):
+class GenerationRequest(BaseModel):
     prompt: str
-    max_length: Optional[int] = 100
-    temperature: Optional[float] = 0.7
-    model_name: Optional[str] = MODEL_NAME  # Use environment model as default
+    max_length: int = 100
+    temperature: float = 0.7
 
 # Response model
 class LLMResponse(BaseModel):
@@ -66,8 +62,10 @@ async def startup_event():
     """Initialize the model on startup"""
     global model_handler
     try:
-        logger.info("Initializing with model: TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-        model_handler = ModelHandler()
+        # Get model name from environment variable or default to tinyllama
+        model_name = os.getenv("MODEL_NAME", "tinyllama")
+        logger.info(f"Initializing with model: {model_name}")
+        model_handler = ModelHandler(model_name=model_name)
         model_handler.load_model()
     except Exception as e:
         logger.error(f"Error initializing model: {str(e)}")
@@ -79,34 +77,26 @@ async def root():
     return {
         "status": "running",
         "service": "Local LLM Service",
-        "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+        "model": model_handler.model_config["name"],
+        "available_models": ModelHandler.get_available_models()
     }
 
 @app.post("/generate", response_model=LLMResponse)
-async def generate_text(request: LLMRequest):
-    global model_handler
+async def generate_text(request: GenerationRequest):
+    """Generate text using the model"""
     try:
-        logger.info(f"Received generation request with prompt: {request.prompt[:50]}...")
-        
-        # Create new model handler if different model is requested
-        if request.model_name != model_handler.model_name:
-            logger.info(f"Switching to model: {request.model_name}")
-            model_handler = ModelHandler(model_name=request.model_name)
-            model_handler.load_model()  # Ensure model is loaded
-        
         generated_text, processing_time = model_handler.generate_text(
-            prompt=request.prompt,
+            request.prompt,
             max_length=request.max_length,
             temperature=request.temperature
         )
-        logger.info(f"Successfully generated response in {processing_time:.2f} seconds")
         return LLMResponse(
             generated_text=generated_text,
             processing_time=processing_time,
-            model_used=model_handler.model_name
+            model_used=model_handler.model_config["name"]
         )
     except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
+        logger.error(f"Error generating text: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/documentation")
@@ -114,7 +104,19 @@ async def get_documentation():
     """Get API documentation"""
     return load_api_docs()
 
-# Only start the server if this file is run directly
+@app.get("/models")
+async def get_models():
+    """Get list of available models"""
+    return ModelHandler.get_available_models()
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Start the Local LLM API server")
+    parser.add_argument("--model", type=str, default="tinyllama",
+                      help="Model to use (tinyllama, deepseek, or phi2)")
+    args = parser.parse_args()
+    
+    # Set the model name in environment
+    os.environ["MODEL_NAME"] = args.model
+    
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8050) 

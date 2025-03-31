@@ -17,6 +17,21 @@ check_port() {
     fi
 }
 
+# Parse command line arguments
+MODEL_NAME="tinyllama"
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --model)
+            MODEL_NAME="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Check if ports are available
 check_port 8050
 
@@ -35,5 +50,6 @@ else
     exit 1
 fi
 
-echo "Starting FastAPI server..."
+echo "Starting FastAPI server with model: $MODEL_NAME..."
+export MODEL_NAME=$MODEL_NAME
 python3 main.py 

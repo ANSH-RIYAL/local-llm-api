@@ -7,8 +7,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ModelHandler:
-    def __init__(self, model_name="TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
+    # Available models and their configurations
+    AVAILABLE_MODELS = {
+        "tinyllama": {
+            "name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+            "description": "A 1.1B parameter language model fine-tuned for chat",
+            "chat_template": "<|system|>You are a helpful AI assistant.</s><|user|>{prompt}</s><|assistant|>"
+        },
+        "deepseek": {
+            "name": "deepseek-ai/deepseek-coder-1.3b-base",
+            "description": "A 1.3B parameter code-specialized language model",
+            "chat_template": "Human: {prompt}\nAssistant:"
+        },
+        "phi2": {
+            "name": "microsoft/phi-2",
+            "description": "A 2.7B parameter compact language model",
+            "chat_template": "Instruct: {prompt}\nOutput:"
+        }
+    }
+
+    def __init__(self, model_name="tinyllama"):
+        """Initialize the model handler with a specific model"""
+        if model_name not in self.AVAILABLE_MODELS:
+            raise ValueError(f"Model {model_name} not available. Available models: {list(self.AVAILABLE_MODELS.keys())}")
+        
         self.model_name = model_name
+        self.model_config = self.AVAILABLE_MODELS[model_name]
         self.model = None
         self.tokenizer = None
         self.device = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -22,10 +46,10 @@ class ModelHandler:
     def load_model(self):
         """Load the model and tokenizer"""
         try:
-            logger.info(f"Loading model: {self.model_name}")
+            logger.info(f"Loading model: {self.model_config['name']}")
             # Load tokenizer and model from cache if available, otherwise download
             self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name,
+                self.model_config['name'],
                 cache_dir=self.cache_dir,
                 trust_remote_code=True
             )
@@ -39,7 +63,7 @@ class ModelHandler:
             }
             
             self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
+                self.model_config['name'],
                 **model_kwargs
             )
             
@@ -58,7 +82,7 @@ class ModelHandler:
                 torch.mps.empty_cache()  # Clear MPS cache before generation
             
             # Format prompt with chat template
-            formatted_prompt = f"<|system|>You are a helpful AI assistant.</s><|user|>{prompt}</s><|assistant|>"
+            formatted_prompt = self.model_config['chat_template'].format(prompt=prompt)
             
             # Tokenize input
             inputs = self.tokenizer(formatted_prompt, return_tensors="pt").to(self.device)
@@ -82,11 +106,14 @@ class ModelHandler:
             # Decode and return generated text
             generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=False)
             
-            # Find the assistant's response after the last <|assistant|> tag
-            assistant_tag = "<|assistant|>"
-            last_assistant_pos = generated_text.rfind(assistant_tag)
-            if last_assistant_pos != -1:
-                generated_text = generated_text[last_assistant_pos + len(assistant_tag):].strip()
+            # Find the assistant's response after the last chat template marker
+            if "Assistant:" in generated_text:
+                generated_text = generated_text.split("Assistant:")[-1].strip()
+            elif "Output:" in generated_text:
+                generated_text = generated_text.split("Output:")[-1].strip()
+            else:
+                # For TinyLlama, remove the chat template
+                generated_text = generated_text.replace(formatted_prompt, "").strip()
             
             # Clean up any remaining special tokens
             generated_text = generated_text.replace("</s>", "").strip()
@@ -95,4 +122,9 @@ class ModelHandler:
             
         except Exception as e:
             logger.error(f"Error generating text: {str(e)}")
-            raise 
+            raise
+
+    @classmethod
+    def get_available_models(cls):
+        """Get a list of available models and their descriptions"""
+        return {name: config["description"] for name, config in cls.AVAILABLE_MODELS.items()} 
