@@ -20,9 +20,14 @@ fi
 echo "Activating virtual environment..."
 source venv/bin/activate
 
-# Install requirements
-echo "Installing requirements..."
-pip install -r requirements.txt
+# Install requirements only if venv was just created
+if [ ! -f "venv/.requirements_installed" ]; then
+    echo "Installing requirements..."
+    pip install -r requirements.txt
+    touch venv/.requirements_installed
+else
+    echo "Requirements already installed, skipping..."
+fi
 
 # Set the model to TinyLlama
 export MODEL_NAME="TinyLlama/TinyLlama-1.1B-Chat-v1.0"
