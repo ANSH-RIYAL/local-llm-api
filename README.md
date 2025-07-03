@@ -1,55 +1,49 @@
-# Local LLM API
+# Local LLM API (DeepSeek GGUF)
 
-A FastAPI service that provides text generation capabilities using the TinyLlama model. This service runs locally and can be exposed to the internet using localtunnel.
+A FastAPI service that provides text generation using the DeepSeek-R1-Distill-Llama-8B GGUF model, running locally with llama-cpp-python. Minimal, secure, and portable.
 
 ## Features
-
-- Text generation using TinyLlama 1.1B Chat model
+- Text generation using DeepSeek 8B GGUF model
 - FastAPI-based REST API
-- Support for Apple Silicon (MPS) and CPU
-- Local model caching
-- Public access via localtunnel
-- Comprehensive API documentation
+- Password-protected API (set interactively on server start)
+- One-command setup and run
+- Local model download (no credentials required)
 
 ## Prerequisites
+- **Python 3.10 or higher**
+- **Bash shell** (for running the setup script)
+- **Ubuntu Linux users:**
+  - You must have the following system packages installed:
+    - `python3-venv` `build-essential` `python3-dev` `cmake` `python3-pip`
+  - If missing, the setup script will warn you and show the install command:
+    ```bash
+    sudo apt-get update && sudo apt-get install python3-venv build-essential python3-dev cmake python3-pip
+    ```
 
-- Python 3.10 or higher
-- Node.js and npm (for localtunnel)
-- Apple Silicon Mac (for MPS support) or any machine with CPU support
+## Quickstart
 
-## Installation
-
-1. Clone the repository:
+1. **Clone the repository:**
 ```bash
-git clone https://github.com/ANSH-RIYAL/local-llm-api.git
+git clone <your-repo-url>
 cd local-llm-api
 ```
 
-2. Make the scripts executable:
+2. **Run everything (setup, download, serve):**
 ```bash
-chmod +x run_server.sh run_tunnel.sh
+chmod +x run_everything.sh
+./run_everything.sh
 ```
+- The script will:
+  - Check for required system packages (on Ubuntu)
+  - Create a virtual environment
+  - Install all requirements
+  - Download the DeepSeek GGUF model (if not present)
+  - Prompt you to set an API password
+  - Start the FastAPI server
 
-3. Install localtunnel globally:
-```bash
-npm install -g localtunnel
-```
-
-## Usage
-
-1. Start the FastAPI server:
-```bash
-./run_server.sh
-```
-
-2. (Optional) Start the tunnel to expose the API publicly:
-```bash
-./run_tunnel.sh
-```
-
-The server will be available at:
+3. **Access the API:**
 - Local: http://localhost:8050
-- Public (via tunnel): https://[tunnel-url].loca.lt
+- All requests require an `Authorization` header with your password.
 
 ## API Endpoints
 
@@ -62,6 +56,7 @@ Returns service status and model information.
 ### 2. Text Generation
 ```http
 POST /generate
+Authorization: <your-password>
 Content-Type: application/json
 
 {
@@ -74,36 +69,13 @@ Content-Type: application/json
 ### 3. API Documentation
 ```http
 GET /documentation
-```
-Returns comprehensive API documentation in JSON format.
-
-## Example Usage
-
-1. Generate text locally:
-```bash
-curl -X POST "http://localhost:8050/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "Write a haiku about coding", "max_length": 100, "temperature": 0.7}'
-```
-
-2. Generate text through tunnel:
-```bash
-curl -X POST "https://[tunnel-url].loca.lt/generate" \
-     -H "Content-Type: application/json" \
-     -d '{"prompt": "Write a haiku about coding", "max_length": 100, "temperature": 0.7}'
-```
-
-3. Get API documentation:
-```bash
-curl "http://localhost:8050/documentation"
+Authorization: <your-password>
 ```
 
 ## Model Information
-
-- Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
-- Device: MPS (Apple Silicon) or CPU
-- Cache Directory: ./models/
+- Model: DeepSeek-R1-Distill-Llama-8B-Q4_0.gguf
+- Format: GGUF (llama.cpp compatible)
+- Downloaded from: bartowski/DeepSeek-R1-Distill-Llama-8B-GGUF (Hugging Face)
 
 ## License
-
 MIT License 
